@@ -96,30 +96,53 @@ function [ graphEdges, edges ] = RPS( vertices )
     end;
     
     % remove edges that inside the polygon
-    for i = 1:size(vertices,1)-1
-        for j = i+1:size(vertices,1)
-            if vertices(i,3) == vertices(j,3)
-                notPolygonEdge = true;
-                for t = 1:size(edges, 1)
-                    if (vertices(i,1)==edges(t,1)&&vertices(i,2)==edges(t,2)...
-                            &&vertices(j,1)==edges(t,3)&&vertices(j,2)==edges(t,4))...
-                        ||(vertices(i,1)==edges(t,3)&&vertices(i,2)==edges(t,4)...
-                            &&vertices(j,1)==edges(t,1)&&vertices(j,2)==edges(t,2))
-                        notPolygonEdge = false;
-                        break;
-                    end;
+    removeList = [];
+    for i = 1:size(graphEdges, 1)
+        if vertices(graphEdges(i,1), 3) == vertices(graphEdges(i,2), 3)
+            x1 = vertices(graphEdges(i, 1), 1);
+            y1 = vertices(graphEdges(i, 1), 2);
+            x2 = vertices(graphEdges(i, 2), 1);
+            y2 = vertices(graphEdges(i, 2), 2);
+            xc = (x1+x2)/2;
+            yc = (y1+y2)/2;
+            polygon = [];
+            for j = 1:size(vertices, 1)
+                if vertices(j, 3) == vertices(graphEdges(i,1), 3)
+                    polygon = [polygon; vertices(j,:)];
                 end;
-                if notPolygonEdge
-                    for t = 1:size(graphEdges, 1)
-                        if (graphEdges(t,1) == i && graphEdges(t,2) == j) || (graphEdges(t,1) == j && graphEdges(t,2) == i)
-                            graphEdges(t,:) = [];
-                            break;
-                        end;
-                    end;
-                end;
+            end;
+            [in, on] = inpolygon(xc, yc, polygon(:,1), polygon(:,2));
+            if in == 1 && on == 0
+                removeList = [removeList, i];
             end;
         end;
     end;
+    graphEdges(removeList(:),:) = [];
+    
+%     for i = 1:size(vertices,1)-1
+%         for j = i+1:size(vertices,1)
+%             if vertices(i,3) == vertices(j,3)
+%                 notPolygonEdge = true;
+%                 for t = 1:size(edges, 1)
+%                     if (vertices(i,1)==edges(t,1)&&vertices(i,2)==edges(t,2)...
+%                             &&vertices(j,1)==edges(t,3)&&vertices(j,2)==edges(t,4))...
+%                         ||(vertices(i,1)==edges(t,3)&&vertices(i,2)==edges(t,4)...
+%                             &&vertices(j,1)==edges(t,1)&&vertices(j,2)==edges(t,2))
+%                         notPolygonEdge = false;
+%                         break;
+%                     end;
+%                 end;
+%                 if notPolygonEdge
+%                     for t = 1:size(graphEdges, 1)
+%                         if (graphEdges(t,1) == i && graphEdges(t,2) == j) || (graphEdges(t,1) == j && graphEdges(t,2) == i)
+%                             graphEdges(t,:) = [];
+%                             break;
+%                         end;
+%                     end;
+%                 end;
+%             end;
+%         end;
+%     end;
     
     
     function [out] = intersect(x1, y1, x2, y2, x3, y3, x4, y4)
@@ -135,4 +158,3 @@ function [ graphEdges, edges ] = RPS( vertices )
         end;
     end
 end
-    
